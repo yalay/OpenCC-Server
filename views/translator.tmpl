@@ -1,0 +1,96 @@
+{{define "translator"}}
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="/static/index.css">
+  <title>translate CHs To Cht</title>
+  <style>
+    .blank_line {
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" style="display: none">
+    <el-row type="flex" class="row-bg" justify="center">
+      <el-col :span="18">
+        <el-menu :default-active="1" mode="horizontal">
+          <el-menu-item index="1">Home</el-menu-item>
+        </el-menu>
+        <div class="blank_line"></div>
+        <el-form id="app" ref="ruleForm" :model="form" :rules="rules">
+          <el-form-item prop="input">
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-input  placeholder="Please input or paste chs content" type="textarea" :rows="8" v-model="form.input"></el-input>
+              </el-col>
+              <el-col :span="12">
+                <el-input placeholder="cht result" type="textarea" :rows="8" v-model="form.output" :readonly="true"></el-input>
+              </el-col>
+            </el-row>
+          </el-form-item>
+          <el-form-item style="float: right">
+            <el-radio-group style="margin-right: 20px" v-model="form.area">
+              <el-radio label="hk">HongKong</el-radio>
+              <el-radio label="tw">Taiwan</el-radio>
+            </el-radio-group>
+            <el-button type="success" @click="submitForm('ruleForm')">Translate</el-button>
+            <el-button @click="resetForm('ruleForm')">Reset</el-button>
+          </el-form-item>
+        </el-form>
+      </el-col>
+    </el-row>
+  </div>
+</body>
+<script src="/static/vue.min.js"></script>
+<script src="/static/vue-resource.min.js"></script>
+<script src="/static/index.js"></script>
+<script>
+  new Vue({
+      el: '#app',
+      data: {
+        form: {
+          input: '',
+          output: '',
+          area: 'hk'
+        },
+        rules: {
+          input: [
+            {required: true, message: 'Please input or paste chs content', trigger: 'blur'}
+          ]
+        }
+      },
+      methods: {
+        submitForm(formName) {
+          this.$refs[formName].validate((valid) => {
+            if (valid) {
+              var vm = this
+              vm.$http.post('/s2t', vm.form,  {emulateJSON: true}).then((response) => {
+                vm.form.output = response.body
+              })
+              .catch(function(response) {
+                var msg = response.body
+                if (msg.length == 0) {
+                  msg = 'Service Unavailable!'
+                }
+                vm.$notify({
+                  title: 'Warning',
+                  message: msg,
+                  type: 'warning'
+                })
+              })
+            } else {
+              return false
+            }
+          })
+        },
+        resetForm(formName) {
+          this.$refs[formName].resetFields()
+        }
+      }
+  });
+  document.getElementById('app').style.display = 'block'
+</script>
+</html>
+{{end}}
